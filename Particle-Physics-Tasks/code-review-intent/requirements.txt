@@ -1,0 +1,18 @@
+# 粒子物理代码审查意图分类 - 依赖项
+
+# PyTorch (GPU 版本，根据 CUDA 版本选择)
+torch>=1.9.0
+# 或 CPU 版本: torch>=1.9.0+cpu
+
+# Transformers (用于 CodeBERT)
+transformers>=4.5.0
+
+# 数据处理
+numpy>=1.19.0
+scikit-learn>=0.24.0
+
+# 工具库
+tqdm>=4.60.0
+
+# 可选：TensorBoard (用于可视化)
+tensorboard>=2.5.0
