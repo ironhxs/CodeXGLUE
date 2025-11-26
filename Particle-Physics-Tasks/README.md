@@ -2,6 +2,18 @@
 
 基于 CodeXGLUE 框架，评估代码模型在粒子物理实验领域的能力。
 
+> **使用场景**: 其他成员训练好模型后，用此框架在粒子物理领域数据上进行评估。
+
+## 🎯 工作流程
+
+```
+1. 爬取 MR 数据 (Git_crawler1)
+2. 预处理成测试集 (preprocess_all_tasks.py)
+3. 加载训练好的模型
+4. 在测试集上评估
+5. 输出评估报告
+```
+
 ## 📁 项目结构
 
 ```
@@ -57,31 +69,45 @@ cd Git_crawler1
 python crawler.py --project-url https://gitlab.com/your-project
 ```
 
-### 3. 一键运行
+### 3. 评估模式（推荐）
+
+**你的场景：其他成员训练好模型 → 你用爬来的数据评估**
 
 ```bash
-./run_all.sh ./Git_crawler1/mr_data all
+# Step 1: 只生成测试集
+python preprocess_all_tasks.py \
+    --mr_data_dir=./Git_crawler1/mr_data \
+    --eval_only
+
+# Step 2: 加载外部模型进行评估
+cd code-summarization/code
+python run.py \
+    --do_test \
+    --test_data_file=../dataset/test.jsonl \
+    --output_dir=../saved_models \
+    --model_name_or_path=/path/to/trained/model  # 其他成员训练好的模型
+
+# Step 3: 计算指标
+python ../evaluator/evaluator.py \
+    -a ../saved_models/gold.txt \
+    -p ../saved_models/predictions.txt
 ```
 
-或分步执行：
+### 4. 完整模式（训练+评估）
+
+如果需要自己训练：
 ```bash
-# Step 1: 数据预处理
+# 生成完整数据集 (train/valid/test)
 python preprocess_all_tasks.py --mr_data_dir=./Git_crawler1/mr_data
 
-# Step 2: 训练 (以代码摘要为例)
+# 训练并评估
 cd code-summarization/code
 python run.py \
     --do_train --do_eval --do_test \
     --train_data_file=../dataset/train.jsonl \
     --eval_data_file=../dataset/valid.jsonl \
     --test_data_file=../dataset/test.jsonl \
-    --output_dir=../saved_models \
-    --model_name_or_path=microsoft/codebert-base
-
-# Step 3: 评估
-python ../evaluator/evaluator.py \
-    -a ../saved_models/gold.txt \
-    -p ../saved_models/predictions.txt
+    --output_dir=../saved_models
 ```
 
 ---

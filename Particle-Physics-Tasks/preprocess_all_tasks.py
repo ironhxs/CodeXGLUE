@@ -116,7 +116,7 @@ def load_mr_data(data_dir: str) -> List[Dict]:
 # 任务1: 代码摘要生成
 # ============================================================
 
-def create_summarization_dataset(mr_data_list: List[Dict], output_dir: str):
+def create_summarization_dataset(mr_data_list: List[Dict], output_dir: str, eval_only: bool = False):
     """
     创建代码摘要数据集
     输入: 代码 diff
@@ -153,25 +153,33 @@ def create_summarization_dataset(mr_data_list: List[Dict], output_dir: str):
         }
         examples.append(example)
     
-    # 划分数据集
-    random.shuffle(examples)
-    n = len(examples)
-    train_end = int(n * 0.8)
-    valid_end = int(n * 0.9)
-    
-    train_data = examples[:train_end]
-    valid_data = examples[train_end:valid_end]
-    test_data = examples[valid_end:]
-    
     # 保存
     os.makedirs(output_dir, exist_ok=True)
+    random.shuffle(examples)
     
-    for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
-        output_file = os.path.join(output_dir, f'{split}.jsonl')
+    if eval_only:
+        # 只生成测试集
+        output_file = os.path.join(output_dir, 'test.jsonl')
         with open(output_file, 'w', encoding='utf-8') as f:
-            for ex in data:
+            for ex in examples:
                 f.write(json.dumps(ex, ensure_ascii=False) + '\n')
-        print(f"  Code Summarization - {split}: {len(data)} examples -> {output_file}")
+        print(f"  Code Summarization - test: {len(examples)} examples -> {output_file}")
+    else:
+        # 划分 train/valid/test
+        n = len(examples)
+        train_end = int(n * 0.8)
+        valid_end = int(n * 0.9)
+        
+        train_data = examples[:train_end]
+        valid_data = examples[train_end:valid_end]
+        test_data = examples[valid_end:]
+        
+        for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
+            output_file = os.path.join(output_dir, f'{split}.jsonl')
+            with open(output_file, 'w', encoding='utf-8') as f:
+                for ex in data:
+                    f.write(json.dumps(ex, ensure_ascii=False) + '\n')
+            print(f"  Code Summarization - {split}: {len(data)} examples -> {output_file}")
     
     return len(examples)
 
@@ -180,7 +188,7 @@ def create_summarization_dataset(mr_data_list: List[Dict], output_dir: str):
 # 任务3: 代码补全
 # ============================================================
 
-def create_completion_dataset(mr_data_list: List[Dict], output_dir: str):
+def create_completion_dataset(mr_data_list: List[Dict], output_dir: str, eval_only: bool = False):
     """
     创建代码补全数据集
     从新增的代码行中，mask 掉部分内容作为补全目标
@@ -236,25 +244,33 @@ def create_completion_dataset(mr_data_list: List[Dict], output_dir: str):
     if len(examples) > 50000:
         examples = random.sample(examples, 50000)
     
-    # 划分数据集
-    random.shuffle(examples)
-    n = len(examples)
-    train_end = int(n * 0.8)
-    valid_end = int(n * 0.9)
-    
-    train_data = examples[:train_end]
-    valid_data = examples[train_end:valid_end]
-    test_data = examples[valid_end:]
-    
     # 保存
     os.makedirs(output_dir, exist_ok=True)
+    random.shuffle(examples)
     
-    for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
-        output_file = os.path.join(output_dir, f'{split}.jsonl')
+    if eval_only:
+        # 只生成测试集
+        output_file = os.path.join(output_dir, 'test.jsonl')
         with open(output_file, 'w', encoding='utf-8') as f:
-            for ex in data:
+            for ex in examples:
                 f.write(json.dumps(ex, ensure_ascii=False) + '\n')
-        print(f"  Code Completion - {split}: {len(data)} examples -> {output_file}")
+        print(f"  Code Completion - test: {len(examples)} examples -> {output_file}")
+    else:
+        # 划分 train/valid/test
+        n = len(examples)
+        train_end = int(n * 0.8)
+        valid_end = int(n * 0.9)
+        
+        train_data = examples[:train_end]
+        valid_data = examples[train_end:valid_end]
+        test_data = examples[valid_end:]
+        
+        for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
+            output_file = os.path.join(output_dir, f'{split}.jsonl')
+            with open(output_file, 'w', encoding='utf-8') as f:
+                for ex in data:
+                    f.write(json.dumps(ex, ensure_ascii=False) + '\n')
+            print(f"  Code Completion - {split}: {len(data)} examples -> {output_file}")
     
     return len(examples)
 
@@ -263,7 +279,7 @@ def create_completion_dataset(mr_data_list: List[Dict], output_dir: str):
 # 任务4: 缺陷检测
 # ============================================================
 
-def create_defect_dataset(mr_data_list: List[Dict], output_dir: str):
+def create_defect_dataset(mr_data_list: List[Dict], output_dir: str, eval_only: bool = False):
     """
     创建缺陷检测数据集
     label=1: bug-fix MR 中修复前的代码（有缺陷）
@@ -342,31 +358,44 @@ def create_defect_dataset(mr_data_list: List[Dict], output_dir: str):
                     examples.append(example)
                     normal_count += 1
     
-    # 划分数据集
-    random.shuffle(examples)
-    n = len(examples)
-    train_end = int(n * 0.8)
-    valid_end = int(n * 0.9)
-    
-    train_data = examples[:train_end]
-    valid_data = examples[train_end:valid_end]
-    test_data = examples[valid_end:]
-    
     # 保存
     os.makedirs(output_dir, exist_ok=True)
+    random.shuffle(examples)
     
-    for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
-        output_file = os.path.join(output_dir, f'{split}.jsonl')
+    if eval_only:
+        # 只生成测试集
+        output_file = os.path.join(output_dir, 'test.jsonl')
         with open(output_file, 'w', encoding='utf-8') as f:
-            for ex in data:
+            for ex in examples:
                 f.write(json.dumps(ex, ensure_ascii=False) + '\n')
-        print(f"  Defect Detection - {split}: {len(data)} examples -> {output_file}")
-    
-    # 统计标签分布
-    for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
-        pos = sum(1 for e in data if e['target'] == 1)
-        neg = len(data) - pos
-        print(f"    {split} - positive: {pos}, negative: {neg}")
+        print(f"  Defect Detection - test: {len(examples)} examples -> {output_file}")
+        
+        # 统计标签分布
+        pos = sum(1 for e in examples if e['target'] == 1)
+        neg = len(examples) - pos
+        print(f"    test - positive: {pos}, negative: {neg}")
+    else:
+        # 划分 train/valid/test
+        n = len(examples)
+        train_end = int(n * 0.8)
+        valid_end = int(n * 0.9)
+        
+        train_data = examples[:train_end]
+        valid_data = examples[train_end:valid_end]
+        test_data = examples[valid_end:]
+        
+        for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
+            output_file = os.path.join(output_dir, f'{split}.jsonl')
+            with open(output_file, 'w', encoding='utf-8') as f:
+                for ex in data:
+                    f.write(json.dumps(ex, ensure_ascii=False) + '\n')
+            print(f"  Defect Detection - {split}: {len(data)} examples -> {output_file}")
+        
+        # 统计标签分布
+        for split, data in [('train', train_data), ('valid', valid_data), ('test', test_data)]:
+            pos = sum(1 for e in data if e['target'] == 1)
+            neg = len(data) - pos
+            print(f"    {split} - positive: {pos}, negative: {neg}")
     
     return len(examples)
 
@@ -381,6 +410,8 @@ def main():
                         help='随机种子')
     parser.add_argument('--tasks', type=str, default='all',
                         help='要构造的任务: all, summarization, completion, defect')
+    parser.add_argument('--eval_only', action='store_true',
+                        help='只生成测试集 (用于评估已训练的模型)')
     
     args = parser.parse_args()
     random.seed(args.seed)
@@ -397,6 +428,8 @@ def main():
         return
     
     print(f"\nTotal MRs loaded: {len(mr_data_list)}")
+    if args.eval_only:
+        print("Mode: Evaluation only (只生成测试集)")
     print()
     
     tasks = args.tasks.lower()
@@ -405,21 +438,21 @@ def main():
     if tasks in ['all', 'summarization']:
         print("Creating Code Summarization dataset...")
         output_dir = os.path.join(args.output_base_dir, 'code-summarization', 'dataset')
-        count = create_summarization_dataset(mr_data_list, output_dir)
+        count = create_summarization_dataset(mr_data_list, output_dir, args.eval_only)
         print(f"  Total: {count} examples\n")
     
     # 任务3: 代码补全
     if tasks in ['all', 'completion']:
         print("Creating Code Completion dataset...")
         output_dir = os.path.join(args.output_base_dir, 'code-completion', 'dataset')
-        count = create_completion_dataset(mr_data_list, output_dir)
+        count = create_completion_dataset(mr_data_list, output_dir, args.eval_only)
         print(f"  Total: {count} examples\n")
     
     # 任务4: 缺陷检测
     if tasks in ['all', 'defect']:
         print("Creating Defect Detection dataset...")
         output_dir = os.path.join(args.output_base_dir, 'defect-detection', 'dataset')
-        count = create_defect_dataset(mr_data_list, output_dir)
+        count = create_defect_dataset(mr_data_list, output_dir, args.eval_only)
         print(f"  Total: {count} examples\n")
     
     print("=" * 60)
